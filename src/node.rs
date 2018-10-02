@@ -69,9 +69,13 @@ use actix_web::{
 pub struct NodeApp {
     node: Arc<Mutex<dyn Node + Send + Sync>>,
 }
-pub fn create_app(node: Arc<Mutex<dyn Node + Send + Sync>>) -> App<NodeApp> {
+pub fn create_app(name: &str, node: Arc<Mutex<dyn Node + Send + Sync>>) -> App<NodeApp> {
     App::with_state(NodeApp { node })
+        .prefix(name)
         .resource("/", |r| {
+            r.method(http::Method::GET)
+                .f(|r| Json(r.state().node.lock().unwrap().node_kind()))
+        }).resource("", |r| {
             r.method(http::Method::GET)
                 .f(|r| Json(r.state().node.lock().unwrap().node_kind()))
         }).resource("/getters", |r| {
