@@ -1,0 +1,24 @@
+GET http://localhost:8088/ HTTP/1.1
+
+###
+
+GET http://localhost:8088/hello HTTP/1.1
+
+###
+
+GET http://localhost:8088/noaa HTTP/1.1
+
+###
+
+GET http://localhost:8088/noaa/getters HTTP/1.1
+
+###
+
+GET http://localhost:8088/noaa/getters/temperature HTTP/1.1
+###
+
+GET http://localhost:8088/noaa/updaters HTTP/1.1
+
+###
+
+GET http://localhost:8088/noaa/updaters/update HTTP/1.1

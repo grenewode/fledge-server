@@ -1,7 +1,0 @@
-[package]
-name = "libfledge-core"
-version = "0.1.0"
-authors = ["Robin Miller <grenewodemiller@gmail.com>"]
-edition = "2018"
-
-[dependencies]

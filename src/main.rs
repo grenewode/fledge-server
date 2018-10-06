@@ -6,6 +6,8 @@ extern crate lazy_static;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
+extern crate env_logger;
+extern crate log;
 extern crate serde_json;
 
 pub mod extensions;
@@ -93,9 +95,13 @@ pub struct RootResponse {
 }
 
 fn main() {
+    std::env::set_var("RUST_LOG", "actix_web=info");
+    env_logger::init();
+
     use actix_web::dev::Handler;
     use actix_web::{
         self, http,
+        middleware::Logger,
         server::{self, HttpHandler, HttpHandlerTask},
         App, HttpRequest, HttpResponse, Json,
     };
@@ -122,25 +128,28 @@ fn main() {
     }
 
     server::new(|| {
-        iter::once(
-            App::new()
-                .resource("/", |r| {
-                    r.get().f(|_| {
-                        Json(RootResponse {
-                            nodes: NODES
-                                .iter()
-                                .map(|entry| RootResponseNode {
-                                    name: entry.0.clone(),
-                                    url: format!("/{}", entry.0),
-                                }).collect::<Vec<_>>(),
+        NODES
+            .iter()
+            .map(|(name, node)| {
+                node::create_app(name, node.clone())
+                    .middleware(Logger::default())
+                    .boxed()
+            }).chain(iter::once(
+                App::new()
+                    .middleware(Logger::new("BASE %r"))
+                    .resource("/", |r| {
+                        r.get().f(|_| {
+                            Json(RootResponse {
+                                nodes: NODES
+                                    .iter()
+                                    .map(|entry| RootResponseNode {
+                                        name: entry.0.clone(),
+                                        url: format!("/{}", entry.0),
+                                    }).collect::<Vec<_>>(),
+                            })
                         })
-                    })
-                }).boxed(),
-        ).chain(
-            NODES
-                .iter()
-                .map(|(name, node)| node::create_app(name, node.clone()).boxed()),
-        )
+                    }).boxed(),
+            ))
     }).bind("127.0.0.1:8088")
     .unwrap()
     .run();

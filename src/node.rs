@@ -6,6 +6,21 @@ use std::sync::{Arc, Mutex};
 
 pub type Result<T> = ::std::result::Result<T, Box<dyn Error>>;
 
+pub enum Mode {
+    Get,
+    Update,
+}
+
+pub struct Verbs {
+    mode: Mode,
+}
+
+pub struct Node {
+    name: String,
+    description: String,
+    verbs: Verbs,
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NodeKind {
     name: String,

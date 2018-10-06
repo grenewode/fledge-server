@@ -107,8 +107,37 @@ impl Node for PythonNode {
             .collect()
     }
 
-    fn do_getter(&self, name: &str, _: &HashMap<String, String>) -> Result<serde_json::Value> {
-        Ok(serde_json::Value::Null)
+    fn do_getter(&self, name: &str, args: &HashMap<String, String>) -> Result<serde_json::Value> {
+        let gil = Python::acquire_gil();
+        let py = gil.python();
+
+        let locals = PyDict::new(py);
+
+        locals.set_item(py, "node", &self.object).unwrap();
+
+        locals
+            .set_item(
+                py,
+                "do_node_getter",
+                self.libfledge_nodes.get(py, "do_node_getter").unwrap(),
+            ).unwrap();
+
+        let data: String = py
+            .eval(
+                &format!(
+                    "do_node_getter(node, '{}', {{ {} }})",
+                    name,
+                    args.iter()
+                        .map(|(name, value)| format!("'{}': '{}',", name, value))
+                        .collect::<String>()
+                ),
+                None,
+                Some(&locals),
+            ).unwrap()
+            .extract(py)
+            .unwrap();
+
+        Ok(serde_json::from_str(&data).unwrap())
     }
 
     fn updaters(&self) -> Vec<Method> {
@@ -142,6 +171,36 @@ impl Node for PythonNode {
         name: &str,
         arguments: &HashMap<String, String>,
     ) -> Result<serde_json::Value> {
-        Ok(serde_json::Value::Null)
+        let gil = Python::acquire_gil();
+        let py = gil.python();
+
+        let locals = PyDict::new(py);
+
+        locals.set_item(py, "node", &self.object).unwrap();
+
+        locals
+            .set_item(
+                py,
+                "do_node_updater",
+                self.libfledge_nodes.get(py, "do_node_updater").unwrap(),
+            ).unwrap();
+
+        let data: String = py
+            .eval(
+                &format!(
+                    "do_node_updater(node, '{}', {{ {} }})",
+                    name,
+                    arguments
+                        .iter()
+                        .map(|(name, value)| format!("'{}': '{}',", name, value))
+                        .collect::<String>()
+                ),
+                None,
+                Some(&locals),
+            ).unwrap()
+            .extract(py)
+            .unwrap();
+
+        Ok(serde_json::from_str(&data).unwrap())
     }
 }

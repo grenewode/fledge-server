@@ -1,3 +1,6 @@
 {
-  "value": "hello world"
+    "libfledge_path": "/home/rmiller/git/Fledge/libfledge",
+    "noaa": {
+        "kind": {"Python": {"node_name": "NOAA"}} 
+    }
 }
